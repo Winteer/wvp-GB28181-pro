@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用于存储设备通道信息
@@ -54,19 +55,35 @@ public interface DeviceChannelMapper {
     int update(DeviceChannel channel);
 
     @Select(value = {" <script>" +
-            "SELECT * FROM ( "+
-            " SELECT * , (SELECT count(0) FROM device_channel WHERE parentId=dc.channelId) as subCount FROM device_channel dc " +
-            " WHERE dc.deviceId=#{deviceId} " +
-            " <if test=\"query != null\"> AND (dc.channelId LIKE '%${query}%' OR dc.name LIKE '%${query}%' OR dc.name LIKE '%${query}%')</if> " +
-            " <if test=\"parentChannelId != null\"> AND dc.parentId=#{parentChannelId} </if> " +
-            " <if test=\"online == true\" > AND dc.status=1</if>" +
-            " <if test=\"online == false\" > AND dc.status=0</if>) dcr" +
-            " WHERE 1=1 " +
-            " <if test=\"hasSubChannel == true\" >  AND subCount >0</if>" +
-            " <if test=\"hasSubChannel == false\" >  AND subCount=0</if>" +
+            " SELECT * FROM device_channel  " +
+            " WHERE 1=1  " +
+            " <if test=\"hasSubChannel == true\" > AND channelId IN ( SELECT DISTINCT ( parentId ) FROM device_channel ) </if>" +
+            " <if test=\"hasSubChannel == false\" > AND channelId NOT IN ( SELECT DISTINCT ( parentId ) FROM device_channel ) </if>" +
+            " AND deviceId=#{deviceId} " +
+            " <if test=\"query != null\"> AND (channelId LIKE '%${query}%' OR name LIKE '%${query}%' OR name LIKE '%${query}%')</if> " +
+            " <if test=\"parentChannelId != null\"> AND parentId=#{parentChannelId} </if> " +
+            " <if test=\"online == true\" > AND status=1</if>" +
+            " <if test=\"online == false\" > AND status=0</if>" +
             " ORDER BY channelId ASC" +
             " </script>"})
     List<DeviceChannel> queryChannelsByDeviceId(String deviceId, String parentChannelId, String query, Boolean hasSubChannel, Boolean online);
+
+    /**
+     * 根据设备id查询子目录下数量
+     * @param deviceId
+     * @return
+     */
+    @Select(value = {" <script>" +
+            " SELECT zml.channelId , (SELECT count(0) FROM device_channel WHERE parentId=zml.channelId) as subCount FROM  " +
+            " ( SELECT channelId FROM device_channel WHERE  channelId IN ( SELECT DISTINCT ( parentId ) FROM device_channel WHERE deviceId = #{deviceId} ) ) zml  " +
+            " </script>"})
+    List<Map<String,Integer>> queryChannelsCountByDeviceId(String deviceId);
+
+    @Select(value = {" <script>" +
+            " SELECT (SELECT count(0) FROM device_channel WHERE parentId=zml.channelId) as subCount FROM  " +
+            " ( SELECT channelId FROM device_channel WHERE  channelId = #{channelId} ) zml  " +
+            " </script>"})
+    Integer countSubCount(String channelId);
 
     @Select("SELECT * FROM device_channel WHERE deviceId=#{deviceId} AND channelId=#{channelId}")
     DeviceChannel queryChannel(String deviceId, String channelId);
