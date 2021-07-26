@@ -1,19 +1,18 @@
 package com.genersoft.iot.vmp.storager;
 
-import java.util.List;
-
 import com.genersoft.iot.vmp.gb28181.bean.*;
-import com.genersoft.iot.vmp.media.zlm.ZLMServerConfig;
 import com.genersoft.iot.vmp.media.zlm.dto.MediaServerItem;
 import com.genersoft.iot.vmp.media.zlm.dto.StreamProxyItem;
 import com.genersoft.iot.vmp.media.zlm.dto.StreamPushItem;
 import com.genersoft.iot.vmp.vmanager.gb28181.platform.bean.ChannelReduce;
 import com.github.pagehelper.PageInfo;
 
-/**    
+import java.util.List;
+
+/**
  * @Description:视频设备数据存储接口
  * @author: swwheihei
- * @date:   2020年5月6日 下午2:14:31     
+ * @date: 2020年5月6日 下午2:14:31
  */
 @SuppressWarnings("rawtypes")
 public interface IVideoManagerStorager {
@@ -83,6 +82,18 @@ public interface IVideoManagerStorager {
 	 */
 	public PageInfo queryChannelsByDeviceId(String deviceId, String query, Boolean hasSubChannel, Boolean online, int page, int count);
 
+
+	/**
+	 * 获取某个设备下所有的通道列表
+	 *
+	 * @param deviceId
+	 * @param query
+	 * @param hasSubChannel
+	 * @param online
+	 * @return
+	 */
+	public List<DeviceChannel> queryAllChannelsByDeviceId(String deviceId, String query, Boolean hasSubChannel, Boolean online);
+
 	/**
 	 * 获取某个设备的通道列表
 	 *
@@ -93,7 +104,8 @@ public interface IVideoManagerStorager {
 
 	/**
 	 * 获取某个设备的通道
-	 * @param deviceId 设备ID
+	 *
+	 * @param deviceId  设备ID
 	 * @param channelId 通道ID
 	 */
 	public DeviceChannel queryChannel(String deviceId, String channelId);

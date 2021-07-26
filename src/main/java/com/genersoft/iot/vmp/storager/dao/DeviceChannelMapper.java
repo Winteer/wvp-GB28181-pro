@@ -80,7 +80,7 @@ public interface DeviceChannelMapper {
     List<Map<String,Integer>> queryChannelsCountByDeviceId(String deviceId);
 
     @Select(value = {" <script>" +
-            " SELECT (SELECT count(0) FROM device_channel WHERE parentId=zml.channelId) as subCount FROM  " +
+            " SELECT DISTINCT(SELECT count(0) FROM device_channel WHERE parentId=zml.channelId) as subCount FROM  " +
             " ( SELECT channelId FROM device_channel WHERE  channelId = #{channelId} ) zml  " +
             " </script>"})
     Integer countSubCount(String channelId);

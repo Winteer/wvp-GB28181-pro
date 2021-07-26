@@ -1,19 +1,12 @@
 package com.genersoft.iot.vmp.storager.impl;
 
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.genersoft.iot.vmp.gb28181.bean.*;
 import com.genersoft.iot.vmp.gb28181.session.VideoStreamSessionManager;
 import com.genersoft.iot.vmp.media.zlm.dto.MediaServerItem;
 import com.genersoft.iot.vmp.media.zlm.dto.StreamProxyItem;
 import com.genersoft.iot.vmp.media.zlm.dto.StreamPushItem;
 import com.genersoft.iot.vmp.storager.IRedisCatchStorage;
+import com.genersoft.iot.vmp.storager.IVideoManagerStorager;
 import com.genersoft.iot.vmp.storager.dao.*;
 import com.genersoft.iot.vmp.vmanager.gb28181.platform.bean.ChannelReduce;
 import com.github.pagehelper.PageHelper;
@@ -23,11 +16,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.stereotype.Component;
-
-import com.genersoft.iot.vmp.storager.IVideoManagerStorager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @Description:视频设备数据存储-jdbc实现
@@ -167,15 +161,31 @@ public class VideoManagerStoragerImpl implements IVideoManagerStorager {
         // 获取到所有正在播放的流
         PageHelper.startPage(page, count);
         List<DeviceChannel> all = deviceChannelMapper.queryChannelsByDeviceId(deviceId, null, query, hasSubChannel, online);
-        // All包含子目录數據 遍历增加subCount
-        if (hasSubChannel == null || hasSubChannel) {
+        // 当all不为空 all包含子目录數據 遍历增加subCount
+        if (all != null && all.size() > 0 && (hasSubChannel == null || hasSubChannel)) {
             all.parallelStream().forEach(it -> {
                 Integer subCount = deviceChannelMapper.countSubCount(it.getChannelId());
-                it.setSubCount(subCount ==null ? 0 : subCount);
+                it.setSubCount(subCount == null ? 0 : subCount);
             });
         }
         return new PageInfo<>(all);
     }
+
+
+    @Override
+    public List<DeviceChannel> queryAllChannelsByDeviceId(String deviceId, String query, Boolean hasSubChannel, Boolean online) {
+        // 获取到所有正在播放的流
+        List<DeviceChannel> all = deviceChannelMapper.queryChannelsByDeviceId(deviceId, null, query, hasSubChannel, online);
+//        // 当all不为空 all包含子目录數據 遍历增加subCount
+//        if (all != null && all.size() >0 && (hasSubChannel == null || hasSubChannel)) {
+//            all.parallelStream().forEach(it -> {
+//                Integer subCount = deviceChannelMapper.countSubCount(it.getChannelId());
+//                it.setSubCount(subCount ==null ? 0 : subCount);
+//            });
+//        }
+        return all;
+    }
+
 
     @Override
     public List<DeviceChannel> queryChannelsByDeviceId(String deviceId) {

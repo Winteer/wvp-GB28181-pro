@@ -1,10 +1,19 @@
 package com.genersoft.iot.vmp.vmanager.gb28181.device;
 
+import com.alibaba.fastjson.JSONObject;
+import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.bean.DeviceChannel;
+import com.genersoft.iot.vmp.gb28181.event.DeviceOffLineDetector;
+import com.genersoft.iot.vmp.gb28181.transmit.callback.DeferredResultHolder;
 import com.genersoft.iot.vmp.gb28181.transmit.callback.RequestMessage;
+import com.genersoft.iot.vmp.gb28181.transmit.cmd.impl.SIPCommander;
 import com.genersoft.iot.vmp.storager.IRedisCatchStorage;
+import com.genersoft.iot.vmp.storager.IVideoManagerStorager;
 import com.github.pagehelper.PageInfo;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +23,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import com.alibaba.fastjson.JSONObject;
-import com.genersoft.iot.vmp.gb28181.bean.Device;
-import com.genersoft.iot.vmp.gb28181.event.DeviceOffLineDetector;
-import com.genersoft.iot.vmp.gb28181.transmit.callback.DeferredResultHolder;
-import com.genersoft.iot.vmp.gb28181.transmit.cmd.impl.SIPCommander;
-import com.genersoft.iot.vmp.storager.IVideoManagerStorager;
-
 import javax.sip.message.Response;
+import java.util.List;
 
 @Api(tags = "国标设备查询", value = "国标设备查询")
 @SuppressWarnings("rawtypes")
@@ -122,17 +125,42 @@ public class DeviceQuery {
 		}
 
 		PageInfo pageResult = storager.queryChannelsByDeviceId(deviceId, query, channelType, online, page, count);
-		return new ResponseEntity<>(pageResult,HttpStatus.OK);
+		return new ResponseEntity<>(pageResult, HttpStatus.OK);
 	}
+
+	@ApiOperation("查询设备下的所有通道通道")
+	@GetMapping("/devices/{deviceId}/ChannelsByDeviceId")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "deviceId", value = "设备id", required = true, dataTypeClass = String.class),
+			@ApiImplicitParam(name = "query", value = "查询内容", dataTypeClass = String.class),
+			@ApiImplicitParam(name = "online", value = "是否在线", dataTypeClass = Boolean.class),
+			@ApiImplicitParam(name = "channelType", value = "设备/子目录-> false/true", dataTypeClass = Boolean.class),
+	})
+	public ResponseEntity<List<DeviceChannel>> ChannelsByDeviceId(@PathVariable String deviceId,
+																  @RequestParam(required = false) String query,
+																  @RequestParam(required = false) Boolean online,
+																  @RequestParam(required = false) Boolean channelType) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("查询视频设备通道API调用");
+		}
+		if (StringUtils.isEmpty(query)) {
+			query = null;
+		}
+
+		List<DeviceChannel> channelList = storager.queryAllChannelsByDeviceId(deviceId, query, channelType, online);
+		return new ResponseEntity<>(channelList, HttpStatus.OK);
+	}
+
 
 	/**
 	 * 同步设备通道
+	 *
 	 * @param deviceId 设备id
 	 * @return
 	 */
 	@ApiOperation("同步设备通道")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name="deviceId", value = "设备id", required = true, dataTypeClass = String.class),
+			@ApiImplicitParam(name = "deviceId", value = "设备id", required = true, dataTypeClass = String.class),
 	})
 	@PostMapping("/devices/{deviceId}/sync")
 	public DeferredResult<ResponseEntity<Device>> devicesSync(@PathVariable String deviceId){
