@@ -3,7 +3,7 @@
 
     <el-dialog title="视频播放" top="0" :close-on-click-modal="false" :visible.sync="showVideoDialog" @close="close()">
         <!-- <LivePlayer v-if="showVideoDialog" ref="videoPlayer" :videoUrl="videoUrl" :error="videoError" :message="videoError" :hasaudio="hasaudio" fluent autoplay live></LivePlayer> -->
-        <player ref="videoPlayer" :visible.sync="showVideoDialog" :videoUrl="videoUrl" :error="videoError" :message="videoError" :height="false" :hasAudio="hasAudio" fluent autoplay live ></player>
+        <player ref="videoPlayer" :visible.sync="showVideoDialog" :videoUrl="videoUrl" :error="videoError" :message="videoError" :hasaudio="hasaudio" fluent autoplay live></player>
         <div id="shared" style="text-align: right; margin-top: 1rem;">
             <el-tabs v-model="tabActiveName" @tab-click="tabHandleClick">
                 <el-tab-pane label="实时视频" name="media">
@@ -151,8 +151,7 @@
 <script>
 // import player from '../dialog/rtcPlayer.vue'
 // import LivePlayer from '@liveqing/liveplayer'
-// import player from '../dialog/easyPlayer.vue'
-import player from '../dialog/jessibuca.vue'
+import player from '../dialog/easyPlayer.vue'
 export default {
     name: 'devicePlayer',
     props: {},
@@ -181,12 +180,11 @@ export default {
             showVideoDialog: false,
             streamId: '',
             app : '',
-            mediaServerId : '',
             convertKey: '',
             deviceId: '',
             channelId: '',
             tabActiveName: 'media',
-            hasAudio: false,
+            hasaudio: false,
             loadingRecords: false,
             recordsLoading: false,
             isLoging: false,
@@ -219,7 +217,7 @@ export default {
             if (tab.name == "codec") {
                 this.$axios({
                     method: 'get',
-                    url: '/zlm/' +this.mediaServerId+ '/index/api/getMediaInfo?vhost=__defaultVhost__&schema=rtmp&app='+ this.app +'&stream='+ this.streamId
+                    url: '/zlm/index/api/getMediaInfo?vhost=__defaultVhost__&schema=rtmp&app='+ this.app +'&stream='+ this.streamId
                 }).then(function (res) {
                     that.tracksLoading = false;
                     if (res.data.code == 0 && res.data.online) {
@@ -240,7 +238,6 @@ export default {
             this.channelId = channelId;
             this.deviceId = deviceId;
             this.streamId = "";
-            this.mediaServerId = "";
             this.app = "";
             this.videoUrl = ""
             if (!!this.$refs.videoPlayer) {
@@ -257,8 +254,8 @@ export default {
                     break;
                 case "streamPlay":
                     this.tabActiveName = "media";
-                    this.showRrecord = false;
-                    this.showPtz = false;
+                    this.showRrecord = false,
+                    this.showPtz = false,
                     this.play(param.streamInfo, param.hasAudio)
                     break;
                 case "control":
@@ -269,20 +266,14 @@ export default {
             console.log(val)
         },
         play: function (streamInfo, hasAudio) {
-            this.hasAudio = hasAudio;
+
+            this.hasaudio = hasAudio;
             this.isLoging = false;
             // this.videoUrl = streamInfo.rtc;
-            this.videoUrl = this.getUrlByStreamInfo(streamInfo);
+            this.videoUrl = streamInfo.ws_flv;
             this.streamId = streamInfo.streamId;
             this.app = streamInfo.app;
-            this.mediaServerId = streamInfo.mediaServerId;
             this.playFromStreamInfo(false, streamInfo)
-        },
-        getUrlByStreamInfo(streamInfo){
-            let baseZlmApi = process.env.NODE_ENV === 'development'?`${location.host}/debug/zlm`:`${location.host}/zlm`
-            // return `${baseZlmApi}/${streamInfo.app}/${streamInfo.streamId}.flv`;
-            // return `http://${baseZlmApi}/${streamInfo.app}/${streamInfo.streamId}.flv`;
-            return streamInfo.ws_flv;
         },
         coverPlay: function () {
             var that = this;
@@ -327,7 +318,7 @@ export default {
             that.$refs.videoPlayer.pause()
             this.$axios({
                 method: 'post',
-                url: '/api/play/convertStop/' + this.convertKey
+                url: '/api/play/convertStop/' + this.channelId + "/" +  + this.streamId + "/" + this.convertKey
               }).then(function (res) {
                 if (res.data.code == 0) {
                   console.log(res.data.msg)
@@ -344,7 +335,7 @@ export default {
         playFromStreamInfo: function (realHasAudio, streamInfo) {
           this.showVideoDialog = true;
           this.hasaudio = realHasAudio && this.hasaudio;
-          this.$refs.videoPlayer.play(this.getUrlByStreamInfo(streamInfo))
+          this.$refs.videoPlayer.play(streamInfo.ws_flv)
         },
         close: function () {
             console.log('关闭视频');
@@ -426,10 +417,8 @@ export default {
                         row.endTime
                 }).then(function (res) {
                     var streamInfo = res.data;
-                    that.app = streamInfo.app;
                     that.streamId = streamInfo.streamId;
-                    that.mediaServerId = streamInfo.mediaServerId;
-                    that.videoUrl = that.getUrlByStreamInfo(streamInfo);
+                    that.videoUrl = streamInfo.ws_flv;
                     that.recordPlay = true;
                 });
             }

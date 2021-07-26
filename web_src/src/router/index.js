@@ -6,7 +6,7 @@ import deviceList from '../components/DeviceList.vue'
 import channelList from '../components/channelList.vue'
 import pushVideoList from '../components/PushVideoList.vue'
 import streamProxyList from '../components/StreamProxyList.vue'
-import devicePosition from  '../components/devicePosition.vue'
+import devicePosition from '../components/devicePosition.vue'
 import login from '../components/Login.vue'
 import parentPlatformList from '../components/ParentPlatformList.vue'
 import cloudRecord from '../components/CloudRecord.vue'
@@ -15,7 +15,7 @@ import web from '../components/setting/Web.vue'
 import sip from '../components/setting/Sip.vue'
 import media from '../components/setting/Media.vue'
 
-import wasmPlayer from '../components/dialog/jessibuca.vue'
+import wasmPlayer from '../components/dialog/easyPlayer.vue'
 import rtcPlayer from '../components/dialog/rtcPlayer.vue'
 
 const originalPush = VueRouter.prototype.push
